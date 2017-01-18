@@ -134,10 +134,10 @@ function training1_menu_dynamic_title() {
  */
 function training1_menu_list_links() {
   $links = array(
-    'List' => 'list',
-    'Table' => 'table',
-    'Image' => 'image',
-    'Access' => 'access',
+    'List' => 'theme/list',
+    'Table' => 'theme/table',
+    'Image' => 'theme/image',
+    'Access' => 'theme/access',
   );
 
   return theme('training1_menu_theme', array(

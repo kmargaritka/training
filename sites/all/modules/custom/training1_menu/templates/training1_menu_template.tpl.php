@@ -10,7 +10,10 @@
 <div>
   <ol>
     <?php foreach ($links as $name => $link): ?>
-        <?php print $item = '<li><a href=' . $link . '>' . $name . '</a></li>'; ?>
+      <?php $link = l($name, $link); ?>
+      <li>
+        <?php print $link; ?>
+      </li>
     <?php endforeach; ?>
   </ol>
 </div>

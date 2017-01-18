@@ -20,7 +20,7 @@ function training1_menu_menu() {
   $item['menu/custom_access'] = array(
     'title' => 'Custom Access Menu Item',
     'page callback' => 'training1_menu_content_empty',
-    'access arguments' => array('Training1_menu: custom access menu item'),
+    'access arguments' => array('training1_menu custom access menu item'),
     'file' => 'training1_menu.pages.inc',
   );
 
@@ -198,7 +198,7 @@ function training1_menu_menu() {
  */
 function training1_menu_permission() {
   return array(
-    'Training1_menu: custom access menu item' => array(
+    'training1_menu custom access menu item' => array(
       'title' => t('Custom access for menu item in module training1_menu'),
       'description' => t('Use to control custom access to menu item.'),
     ),
