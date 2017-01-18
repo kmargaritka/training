@@ -1,0 +1,5 @@
+name = Training1_menu
+description = Demonstrates homework on topic Menu.
+core = 7.x
+version = 1.0
+package = Training
