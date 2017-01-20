@@ -6,6 +6,16 @@
  */
 
 /**
+ * Secret key to login without username and password.
+ */
+define('TRAINING2_FORM_SECRET_KEY', 'сим-сим откройся');
+
+/**
+ * Url with current exchange rates.
+ */
+define('TRAINING2_FORM_NBRB_RATES_XML', 'http://www.nbrb.by/Services/XmlExRates.aspx');
+
+/**
  * Implements hook_block_info().
  */
 function training2_form_block_info() {
@@ -24,12 +34,12 @@ function training2_form_block_configure($delta = '') {
   $form = array();
 
   if ($delta = 'currency') {
-    $arrCurrency = training2_form_conf_content();
+    $currency = training2_form_conf_content();
 
     $form['form_currency'] = array(
       '#type' => 'checkboxes',
       '#title' => t('Choose currencies'),
-      '#options' => drupal_map_assoc($arrCurrency),
+      '#options' => drupal_map_assoc($currency),
     );
   }
 
@@ -42,7 +52,9 @@ function training2_form_block_configure($delta = '') {
 function training2_form_block_save($delta = '', $edit = array()) {
 
   if ($delta == 'currency') {
-    variable_set('form_currency', $edit['form_currency']);
+    if (!empty($edit['form_currency'])) {
+      variable_set('form_currency', $edit['form_currency']);
+    }
   }
 }
 
@@ -57,10 +69,6 @@ function training2_form_block_view($delta = '') {
       $block['subject'] = t('Currency');
       $block['content'] = training2_form_content();
       break;
-
-    case 'user-login-form':
-      $block['content'] = print_r('hello');
-      break;
   }
 
   return $block;
@@ -73,15 +81,15 @@ function training2_form_block_view($delta = '') {
  *   Return array which includes CharCode and Rate.
  */
 function training2_form_conf_content() {
-  $xmlArray = training2_form_get_xml_data();
-  $currency = $xmlArray['Currency'];
+  $xml_array = training2_form_get_xml_data();
+  $array_currency = $xml_array['Currency'];
 
-  $arrValue = array();
-  $n = count($currency);
+  $arr_value = array();
+  $n = count($array_currency);
   for ($i = 0; $i < $n; $i++) {
-    $arrValue[$i] = $currency[$i]['CharCode'] . ' - ' . $currency[$i]['Rate'];
+    $arr_value[$i] = $array_currency[$i]['CharCode'] . ' - ' . $array_currency[$i]['Rate'];
   }
-  return $arrValue;
+  return $arr_value;
 }
 
 /**
@@ -91,12 +99,16 @@ function training2_form_conf_content() {
  *   Return array currency.
  */
 function training2_form_get_xml_data() {
-  $url = 'http://www.nbrb.by/Services/XmlExRates.aspx';
-  $xmlData = simplexml_load_file($url);
-  $jsonData = json_encode($xmlData);
-  $xmlArray = json_decode($jsonData, TRUE);
+  $xml_array = array();
+  $url = TRAINING2_FORM_NBRB_RATES_XML;
 
-  return $xmlArray;
+  if (!(empty($url))) {
+    $xml_data = simplexml_load_file($url);
+    $json_data = json_encode($xml_data);
+    $xml_array = json_decode($json_data, TRUE);
+  }
+
+  return $xml_array;
 }
 
 /**
@@ -106,11 +118,13 @@ function training2_form_content() {
   $xmlArray = training2_form_get_xml_data();
   $date = $xmlArray['@attributes']['Date'];
   $choose = variable_get('form_currency');
-  $chooseCurrency = implode($choose, '<br />');
-  $returnStr = strstr($chooseCurrency, '<br />0<br />', TRUE);
+  $choose_currency = '';
+  if (is_array($choose)) {
+    $clean_array = array_diff($choose, array(0));
+    $choose_currency = implode($clean_array, '<br />');
+  }
   $dated = date('d-m-Y H:i:s');
-  $text = t('Update time:');
-  $result = $date . '<br />' . $returnStr . '<br /><br />' . $text . '<br />' . $dated;
+  $result = $date . '<br />' . $choose_currency . '<br /><br />' . $dated;
 
   return $result;
 }
@@ -127,7 +141,7 @@ function training2_form_form_user_login_block_alter(&$form, &$form_state, $form_
   );
   $form['name']['#required'] = FALSE;
   $form['pass']['#required'] = FALSE;
-  array_push($form['#validate'], 'training2_form_form_user_login_block_validate');
+  $form['#validate'][] = 'training2_form_form_user_login_block_validate';
   array_unshift($form['#submit'], 'training2_form_form_user_login_block_submit');
 
   return $form;
@@ -143,8 +157,8 @@ function training2_form_form_user_login_block_alter(&$form, &$form_state, $form_
  */
 function training2_form_form_user_login_block_validate($form, &$form_state) {
 
-  if (($form_state['values']['secret_key']) != '') {
-    if ($form_state['values']['secret_key'] == 'сим-сим откройся') {
+  if ($form_state['values']['secret_key'] != '') {
+    if ($form_state['values']['secret_key'] == TRAINING2_FORM_SECRET_KEY) {
       form_clear_error();
       drupal_get_messages();
     }
