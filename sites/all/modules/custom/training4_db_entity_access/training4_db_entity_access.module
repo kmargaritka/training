@@ -1,0 +1,164 @@
+<?php
+
+/**
+ * @file
+ * Homework on topic Database, entities, access.
+ */
+
+/**
+ * Implements hook_entity_info().
+ */
+function training4_db_entity_access_entity_info() {
+  $info['training4_text_message'] = array(
+    'label' => t('Message'),
+    'controller class' => 'Training4TextMessageController',
+    'base table' => 'training4_text_message',
+    'access callback' => TRUE,
+    'entity keys' => array(
+      'id' => 'id',
+    ),
+  );
+
+  return $info;
+}
+
+/**
+ * Training4TextMessageControllerInterface definition.
+ */
+interface Training4TextMessageControllerInterface
+  extends DrupalEntityControllerInterface {
+
+  /**
+   * Create an entity.
+   */
+  public function create();
+
+  /**
+   * Save an entity.
+   *
+   * @param object $entity
+   *   The entity to save.
+   */
+  public function save($entity);
+
+}
+
+/**
+ * Training4TextMessageController extends DrupalDefaultEntityController.
+ */
+class Training4TextMessageController
+  extends DrupalDefaultEntityController
+  implements Training4TextMessageControllerInterface {
+
+  /**
+   * Create and return a new training4_text_message entity.
+   */
+  public function create() {
+    $entity = new stdClass();
+    $entity->id = 0;
+    $entity->uid = 0;
+    $entity->type = rand(1, 100);
+    $entity->title = '';
+    $entity->body = '';
+
+    return $entity;
+  }
+
+  /**
+   * Saves the custom fields using drupal_write_record().
+   */
+  public function save($entity) {
+
+    global $user;
+    $primary_keys = $entity->id ? array('id') : array();
+    $record = array(
+      'id' => $entity->id,
+      'uid' => $user->uid,
+      'type' => $entity->type,
+      'title' => $entity->title,
+      'body' => $entity->body,
+    );
+    drupal_write_record('training4_text_message', $record, $primary_keys);
+  }
+
+}
+
+/**
+ * Implements hook_menu().
+ */
+function training4_db_entity_access_menu() {
+  $item['message'] = array(
+    'title' => 'Messages',
+    'page callback' => 'training4_db_entity_access_page',
+    'access callback' => TRUE,
+    'file' => 'training4_db_entity_access.pages.inc',
+  );
+  $item['message/add'] = array(
+    'title' => 'Add text message',
+    'page callback' => 'training4_db_entity_access_message_add',
+    'access callback' => TRUE,
+    'file' => 'training4_db_entity_access.pages.inc',
+  );
+  $item['message/%'] = array(
+    'title callback' => 'training4_db_entity_access_title',
+    'title arguments' => array(1),
+    'page callback' => 'training4_db_entity_access_view',
+    'page arguments' => array(1),
+    'access arguments' => TRUE,
+    'file' => 'training4_db_entity_access.pages.inc',
+  );
+
+  return $item;
+}
+
+/**
+ * Form function to create an training4_text_message entity.
+ */
+function training4_db_entity_access_form($form, &$form_state, $entity) {
+  $form['title'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Title'),
+    '#required' => TRUE,
+    '#default_value' => $entity->title,
+  );
+  $form['body'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Body'),
+    '#required' => TRUE,
+    '#default_value' => $entity->body,
+  );
+
+  $form['text_message_entity'] = array(
+    '#type' => 'value',
+    '#value' => $entity,
+  );
+
+  field_attach_form('training4_text_message', $entity, $form, $form_state);
+
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save'),
+    '#weight' => 100,
+  );
+
+  return $form;
+}
+
+/**
+ * Validation handler for training4_db_entity_access_form form.
+ */
+function training4_db_entity_access_form_validate($form, &$form_state) {
+  field_attach_form_validate('training4_text_message', $form_state['values']['text_message_entity'], $form, $form_state);
+}
+
+/**
+ * Form submit handler: Submits training4_db_entity_access_form information.
+ */
+function training4_db_entity_access_form_submit($form, &$form_state) {
+  $entity = $form_state['values']['text_message_entity'];
+  $entity->title = $form_state['values']['title'];
+  $entity->body = $form_state['values']['body'];
+  field_attach_submit('training4_text_message', $entity, $form, $form_state);
+  entity_get_controller('training4_text_message')->save($entity);
+  $form_state['redirect'] = 'message';
+}

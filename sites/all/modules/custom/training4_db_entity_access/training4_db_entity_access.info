@@ -1,0 +1,5 @@
+name = Training4_db_entity_access
+description = Demonstrates homework on topic Database, entities, access.
+core = 7.x
+version = 1.0
+package = Training
