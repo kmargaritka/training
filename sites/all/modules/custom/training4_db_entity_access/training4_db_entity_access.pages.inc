@@ -86,16 +86,14 @@ function training4_db_entity_access_message_add() {
 /**
  * Page callback for title message/%.
  */
-function training4_db_entity_access_title($id) {
-  $entity = training4_db_entity_access_message_load($id);
+function training4_db_entity_access_title($entity) {
   return t('@title', array('@title' => $entity->title));
 }
 
 /**
  * Page callback for message/%.
  */
-function training4_db_entity_access_view($id) {
-  $entity = training4_db_entity_access_message_load($id);
+function training4_db_entity_access_view($entity) {
   if (!empty($entity)) {
     $content = array(
       'body' => array(
@@ -109,17 +107,6 @@ function training4_db_entity_access_view($id) {
   }
 
   return $content;
-}
-
-/**
- * Load one entity of the type training4_text_message.
- */
-function training4_db_entity_access_message_load($id, $reset = FALSE) {
-
-  $ids = isset($id) ? array($id) : array();
-  $entity = training4_db_entity_access_load_all($ids, array(), $reset);
-
-  return $entity ? reset($entity) : FALSE;
 }
 
 /**
@@ -150,11 +137,4 @@ function training4_db_entity_access_articles_access() {
   }
 
   return $content;
-}
-
-/**
- * Page callback for message/add.
- */
-function training4_db_entity_access_message_edit($id) {
-  return drupal_get_form('training4_db_entity_access_form', $id);
 }

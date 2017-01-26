@@ -87,19 +87,19 @@ class Training4TextMessageController
  * Implements hook_menu().
  */
 function training4_db_entity_access_menu() {
-  $item['message'] = array(
+  $items['message'] = array(
     'title' => 'Messages',
     'page callback' => 'training4_db_entity_access_page',
     'access callback' => TRUE,
     'file' => 'training4_db_entity_access.pages.inc',
   );
-  $item['message/add'] = array(
+  $items['message/add'] = array(
     'title' => 'Add text message',
     'page callback' => 'training4_db_entity_access_message_add',
     'access callback' => TRUE,
     'file' => 'training4_db_entity_access.pages.inc',
   );
-  $item['message/%'] = array(
+  $items['message/%training4_db_entity_access'] = array(
     'title callback' => 'training4_db_entity_access_title',
     'title arguments' => array(1),
     'page callback' => 'training4_db_entity_access_view',
@@ -108,27 +108,38 @@ function training4_db_entity_access_menu() {
     'file' => 'training4_db_entity_access.pages.inc',
   );
   // 'View' tab for an individual entity page.
-  $items['message/%/view'] = array(
+  $items['message/%training4_db_entity_access/view'] = array(
     'title' => 'View',
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'access callback' => TRUE,
+    'weight' => -10,
   );
   // 'Edit' tab for an individual message page.
-  $menu['message/%/edit'] = array(
+  $items['message/%training4_db_entity_access/edit'] = array(
     'title' => 'Edit',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('training4_db_entity_access_form', 1),
     'access callback' => TRUE,
     'type' => MENU_LOCAL_TASK,
   );
-  $item['articles'] = array(
+  $items['articles'] = array(
     'title' => 'Articles',
     'page callback' => 'training4_db_entity_access_articles_access',
     'access callback' => TRUE,
     'file' => 'training4_db_entity_access.pages.inc',
   );
 
-  return $item;
+  return $items;
+}
+
+/**
+ * Loads $entity using $id.
+ */
+function training4_db_entity_access_load($id, $conditions = array(), $reset = FALSE) {
+  $ids = isset($id) ? array($id) : array();
+  $entity = entity_load('training4_text_message', $ids, $conditions, $reset);
+
+  return $entity ? reset($entity) : FALSE;
 }
 
 /**
