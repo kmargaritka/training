@@ -12,13 +12,13 @@ function training4_db_entity_access_page() {
   $entities = training4_db_entity_access_load_all();
 
   if (!empty($entities)) {
-    $form['list_table'] = training4_db_entity_access_table();
-    return $form;
+    $content['list_table'] = training4_db_entity_access_table();
   }
   else {
-    $text = t('Messages are empty.');
-    return $text;
+    $content = t('Messages are empty.');
   }
+
+  return $content;
 }
 
 /**
@@ -34,18 +34,17 @@ function training4_db_entity_access_load_all($ids = FALSE, $conditions = array()
 function training4_db_entity_access_table() {
 
   $header = array(
-    'id' => array('data' => t('ID'), 'field' => 't_m.id', 'sort' => 'asc'),
-    'author' => array('data' => t('Author'), 'field' => 't_m.uid'),
-    'type'  => array('data' => t('Type'), 'field' => 't_m.type'),
-    'title' => array('data' => t('Title'), 'field' => 't_m.title'),
-    'body' => array('data' => t('Body'), 'field' => 't_m.body'),
+    'id' => array('data' => t('ID'), 'field' => 'ttm.id', 'sort' => 'asc'),
+    'author' => array('data' => t('Author'), 'field' => 'ttm.uid'),
+    'title' => array('data' => t('Title'), 'field' => 'ttm.title'),
+    'body' => array('data' => t('Body'), 'field' => 'ttm.body'),
     t('Actions'),
   );
 
-  $query = db_select('training4_text_message', 't_m')
+  $query = db_select('training4_text_message', 'ttm')
     ->extend('TableSort')
-    ->extend('PagerDefault')->limit(5)
-    ->fields('t_m')
+    ->extend('PagerDefault')->limit(1)
+    ->fields('ttm')
     ->orderByHeader($header);
   $entities = $query->execute();
 
@@ -56,10 +55,9 @@ function training4_db_entity_access_table() {
       'data' => array(
         'id' => $entity->id,
         'author' => $user->name,
-        'type' => $entity->type,
         'title' => $entity->title,
         'body' => $entity->body,
-        'actions' => l(t('Edit'), 'message/' . $entity->id),
+        'actions' => l(t('Edit'), 'message/' . $entity->id . '/edit'),
       ),
     );
   }
@@ -98,12 +96,17 @@ function training4_db_entity_access_title($id) {
  */
 function training4_db_entity_access_view($id) {
   $entity = training4_db_entity_access_message_load($id);
-  $content = array(
-    'body' => array(
-      '#type' => 'item',
-      '#markup' => $entity->body,
-    ),
-  );
+  if (!empty($entity)) {
+    $content = array(
+      'body' => array(
+        '#type' => 'item',
+        '#markup' => $entity->body,
+      ),
+    );
+  }
+  else {
+    $content = t("Message doesn\'t load");
+  }
 
   return $content;
 }
@@ -113,9 +116,45 @@ function training4_db_entity_access_view($id) {
  */
 function training4_db_entity_access_message_load($id, $reset = FALSE) {
 
-  $ids = (isset($id) ? array($id) : array());
+  $ids = isset($id) ? array($id) : array();
   $entity = training4_db_entity_access_load_all($ids, array(), $reset);
 
   return $entity ? reset($entity) : FALSE;
 }
 
+/**
+ * Page callback for articles.
+ */
+function training4_db_entity_access_articles_access() {
+  $articles = db_select('node', 'n')
+    ->fields('n', array('nid', 'title'))
+    ->condition('type', 'article')
+    ->execute()
+    ->fetchAllAssoc('nid');
+
+  if ($articles) {
+    $links = array();
+    foreach ($articles as $item) {
+      $links[] = array(
+        'title' => $item->title,
+        'href' => 'node/' . $item->nid,
+      );
+    }
+    $content = array(
+      '#theme' => 'links',
+      '#links' => $links,
+    );
+  }
+  else {
+    $content = t("Articles doesn\'t exist");
+  }
+
+  return $content;
+}
+
+/**
+ * Page callback for message/add.
+ */
+function training4_db_entity_access_message_edit($id) {
+  return drupal_get_form('training4_db_entity_access_form', $id);
+}

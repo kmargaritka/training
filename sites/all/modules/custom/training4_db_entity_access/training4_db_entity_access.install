@@ -9,7 +9,6 @@
  * Implements hook_schema().
  */
 function training4_db_entity_access_schema() {
-  $schema = array();
   $schema['training4_text_message'] = array(
     'description' => 'The base table for text messages.',
     'fields' => array(
