@@ -142,12 +142,12 @@ function training2_form_content() {
     $choose = variable_get('form_currency');
     $clean_array = array_diff($choose, array(0));
     $dated = date('d-m-Y H:i:s');
-
-    $item = '';
+    
+    $output = '';
     foreach ($clean_array as $item) {
-      $item .= '<br />' . $item;
+      $output .= '<br />' . $item;
     }
-    return $date . '<br />' . $item . '<br /><br />' . $dated;
+    return $date . '<br />' . $output . '<br /><br />' . $dated;
 
   }
 }
