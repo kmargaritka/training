@@ -43,7 +43,7 @@ function training4_db_entity_access_table() {
 
   $query = db_select('training4_text_message', 'ttm')
     ->extend('TableSort')
-    ->extend('PagerDefault')->limit(1)
+    ->extend('PagerDefault')->limit(10)
     ->fields('ttm')
     ->orderByHeader($header);
   $entities = $query->execute();
@@ -103,7 +103,7 @@ function training4_db_entity_access_view($entity) {
     );
   }
   else {
-    $content = t("Message doesn\'t load");
+    $content = t("Message doesn't load");
   }
 
   return $content;
@@ -133,7 +133,7 @@ function training4_db_entity_access_articles_access() {
     );
   }
   else {
-    $content = t("Articles doesn\'t exist");
+    $content = t("Articles doesn't exist");
   }
 
   return $content;
