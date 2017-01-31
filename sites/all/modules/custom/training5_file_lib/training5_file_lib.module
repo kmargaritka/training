@@ -1,0 +1,65 @@
+<?php
+
+/**
+ * @file
+ * Homework on topic Files, Libraries, Views.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function training5_file_lib_menu() {
+  $items['files'] = array(
+    'title' => 'Files',
+    'page callback' => 'training5_file_lib_files',
+    'access callback' => TRUE,
+    'file' => 'training5_file_lib.pages.inc',
+  );
+  $items['files/%ctools_js/upload_file'] = array(
+    'title' => 'Add file',
+    'page callback' => 'training5_file_lib_upload_file',
+    'page arguments' => array(1),
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+    'file' => 'training5_file_lib.pages.inc',
+  );
+  $items['files/download/%file'] = array(
+    'title' => 'Download file',
+    'page callback' => 'training5_file_lib_download',
+    'page arguments' => array(2),
+    'access callback' => 'training5_file_lib_access_callback',
+    'type' => MENU_CALLBACK,
+    'file' => 'training5_file_lib.pages.inc',
+  );
+  $items['currency/load'] = array(
+    'title' => 'Currency load',
+    'page callback' => 'training5_file_lib_batch',
+    'access callback' => TRUE,
+    'file' => 'training5_file_lib.pages.inc',
+  );
+
+  return $items;
+}
+
+/**
+ * Custom access callback function for downloading files.
+ */
+function training5_file_lib_access_callback() {
+  global $user;
+  $query = db_select('file_managed', 'f')
+    ->fields('f', array('uid'))
+    ->condition('f.uid', $user->uid);
+  $result = $query->execute()->fetchCol();
+
+  return in_array($user->uid, $result);
+}
+
+/**
+ * Implements hook_views_api().
+ */
+function training5_file_lib_views_api() {
+  return array(
+    'api' => 3,
+    'path' => drupal_get_path('module', 'training5_file_lib') . '/includes/views',
+  );
+}
