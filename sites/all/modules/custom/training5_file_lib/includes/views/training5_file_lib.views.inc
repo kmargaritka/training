@@ -6,7 +6,7 @@
  */
 
 /**
-* Implements hook_views_data().
+ * Implements hook_views_data().
  */
 function training5_file_lib_views_data() {
   $data['training5_file_lib_rates']['table']['group'] = t('Rates table');

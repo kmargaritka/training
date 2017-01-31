@@ -220,4 +220,3 @@ function training5_file_lib_get_xml_data() {
     return FALSE;
   }
 }
-
