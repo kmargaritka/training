@@ -1,0 +1,5 @@
+name = Training2_form
+description = Demonstrates homework on topic Block and Menu.
+core = 7.x
+version = 1.0
+package = Training
