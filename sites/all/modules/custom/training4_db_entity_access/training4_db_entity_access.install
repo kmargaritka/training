@@ -1,0 +1,53 @@
+<?php
+
+/**
+ * @file
+ * Module describes the homework on topic Database, entities, access.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function training4_db_entity_access_schema() {
+  $schema['training4_text_message'] = array(
+    'description' => 'The base table for text messages.',
+    'fields' => array(
+      'id' => array(
+        'description' => 'The primary identifier for a message.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'uid' => array(
+        'description' => 'The users.uid that owns this message',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'type' => array(
+        'description' => 'The type of this message.',
+        'type' => 'int',
+        'not null' => TRUE,
+      ),
+      'title' => array(
+        'description' => 'The title of this message.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'body' => array(
+        'description' => 'The bode of this message.',
+        'type' => 'text',
+        'not null' => TRUE,
+      ),
+    ),
+    'primary key' => array('id'),
+    'indexes' => array(
+      'text_message_uid' => array('uid'),
+      'text_message_title' => array('title'),
+    ),
+  );
+
+  return $schema;
+}

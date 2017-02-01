@@ -1,0 +1,217 @@
+<?php
+
+/**
+ * @file
+ * Homework on topic Database, entities, access.
+ */
+
+include_once('training4_db_entity_access.class.inc');
+
+/**
+ * Implements hook_menu().
+ */
+function training4_db_entity_access_menu() {
+  $items['message'] = array(
+    'title' => 'Messages',
+    'page callback' => 'training4_db_entity_access_page',
+    'access callback' => TRUE,
+    'file' => 'training4_db_entity_access.pages.inc',
+  );
+  $items['message/add'] = array(
+    'title' => 'Add text message',
+    'page callback' => 'training4_db_entity_access_message_add',
+    'access callback' => TRUE,
+    'file' => 'training4_db_entity_access.pages.inc',
+  );
+  $items['message/%training4_db_entity_access'] = array(
+    'title callback' => 'training4_db_entity_access_title',
+    'title arguments' => array(1),
+    'page callback' => 'training4_db_entity_access_view',
+    'page arguments' => array(1),
+    'access callback' => TRUE,
+    'file' => 'training4_db_entity_access.pages.inc',
+  );
+  // 'View' tab for an individual entity page.
+  $items['message/%training4_db_entity_access/view'] = array(
+    'title' => 'View',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'access callback' => TRUE,
+    'weight' => -10,
+  );
+  // 'Edit' tab for an individual message page.
+  $items['message/%training4_db_entity_access/edit'] = array(
+    'title' => 'Edit',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('training4_db_entity_access_form', 1),
+    'access callback' => TRUE,
+    'type' => MENU_LOCAL_TASK,
+  );
+  $items['articles'] = array(
+    'title' => 'Articles',
+    'page callback' => 'training4_db_entity_access_articles_access',
+    'access callback' => TRUE,
+    'file' => 'training4_db_entity_access.pages.inc',
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function training4_db_entity_access_permission() {
+  return array(
+    'training4_db_entity_access view articles' => array(
+      'title' => t('View articles'),
+      'description' => t('View articles of other users.'),
+    ),
+    'training4_db_entity_access edit articles' => array(
+      'title' => t('Edit articles'),
+      'description' => t('Edit articles of other users.'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_entity_info().
+ */
+function training4_db_entity_access_entity_info() {
+  $info['training4_text_message'] = array(
+    'label' => t('Message'),
+    'controller class' => 'Training4TextMessageController',
+    'base table' => 'training4_text_message',
+    'access callback' => TRUE,
+    'entity keys' => array(
+      'id' => 'id',
+    ),
+  );
+
+  return $info;
+}
+
+/**
+ * Implements hook_node_access_records().
+ */
+function training4_db_entity_access_node_access_records($node) {
+
+  if ($node->status == NODE_PUBLISHED) {
+    $grants[] = array(
+      'realm' => 'view articles',
+      'gid' => 1,
+      'grant_view' => 1,
+      'grant_update' => 0,
+      'grant_delete' => 0,
+      'priority' => 0,
+    );
+  }
+  $grants[] = array(
+    'realm' => 'edit articles',
+    'gid' => 2,
+    'grant_view' => 1,
+    'grant_update' => 1,
+    'grant_delete' => 1,
+    'priority' => 0,
+  );
+  $grants[] = array(
+    'realm' => 'article owner',
+    'gid' => $node->uid,
+    'grant_view' => 1,
+    'grant_update' => 1,
+    'grant_delete' => 1,
+    'priority' => 0,
+  );
+
+  return $grants;
+}
+
+/**
+ * Implements hook_node_grants().
+ */
+function training4_db_entity_access_node_grants($account, $op) {
+  $grants = array();
+  $uids = db_select('training4_text_message', 'ttm')
+    ->fields('ttm', array('uid'))
+    ->execute()
+    ->fetchCol();
+
+  if (in_array($uids, $account->uid)) {
+    $grants['article owner'] = array($account->uid);
+  }
+  if (user_access('training4_db_entity_access edit articles', $account)) {
+    $grants['edit articles'] = array(2);
+  }
+  if (user_access('training4_db_entity_access edit articles', $account)) {
+    $grants['view articles'] = array(1);
+  }
+
+  return $grants;
+}
+
+/**
+ * Loads $entity using $id.
+ */
+function training4_db_entity_access_load($id) {
+  $entity = entity_load_single('training4_text_message', $id);
+  return $entity;
+}
+
+/**
+ * Load one entity from the database.
+ */
+function entity_load_single($entity_type, $id) {
+  $entities = entity_load($entity_type, array($id));
+  return reset($entities);
+}
+
+/**
+ * Form function to create an training4_text_message entity.
+ */
+function training4_db_entity_access_form($form, &$form_state, $entity) {
+  field_attach_form('training4_text_message', $entity, $form, $form_state);
+  $form['title'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Title'),
+    '#required' => TRUE,
+    '#default_value' => $entity->title,
+  );
+  $form['body'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Body'),
+    '#required' => TRUE,
+    '#default_value' => $entity->body,
+  );
+
+  $form['text_message_entity'] = array(
+    '#type' => 'value',
+    '#value' => $entity,
+  );
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save'),
+    '#weight' => 100,
+  );
+
+  return $form;
+}
+
+/**
+ * Validation handler for training4_db_entity_access_form form.
+ */
+function training4_db_entity_access_form_validate($form, &$form_state) {
+  field_attach_form_validate('training4_text_message', $form_state['values']['text_message_entity'], $form, $form_state);
+}
+
+/**
+ * Submit handler: Submits training4_db_entity_access_form information.
+ */
+function training4_db_entity_access_form_submit($form, &$form_state) {
+  $entity = $form_state['values']['text_message_entity'];
+
+  $entity->title = $form_state['values']['title'];
+  $entity->body = $form_state['values']['body'];
+
+  field_attach_submit('training4_text_message', $entity, $form, $form_state);
+  entity_get_controller('training4_text_message')->save($entity);
+
+  $form_state['redirect'] = 'message';
+}

