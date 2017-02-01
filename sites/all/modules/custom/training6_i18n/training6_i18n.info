@@ -1,0 +1,5 @@
+name = Training6_i18n
+description = Demonstrates homework on topic i18n, dates, security, rules.
+core = 7.x
+version = 1.0
+package = Training
