@@ -1,0 +1,5 @@
+name = Training5_file_lib
+description = Demonstrates homework on topic Files and Libraries.
+core = 7.x
+version = 1.0
+package = Training
