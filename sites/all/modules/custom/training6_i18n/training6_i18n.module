@@ -1,0 +1,32 @@
+<?php
+
+/**
+ * @file
+ * Homework on topic i18n, dates, security, rules.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function training6_i18n_menu() {
+  $items['i18n'] = array(
+    'title' => 'Internationalization',
+    'page callback' => 'training6_i18n_page_callback',
+    'access callback' => TRUE,
+    'file' => 'training6_i18n.pages.inc',
+  );
+  $items['registration_date'] = array(
+    'title' => 'Registration date',
+    'page callback' => 'training6_i18n_registration_date',
+    'access callback' => TRUE,
+    'file' => 'training6_i18n.pages.inc',
+  );
+  $items['textarea'] = array(
+    'title' => 'Textarea and Button',
+    'page callback' => 'training6_i18n_textarea_and_button',
+    'access callback' => TRUE,
+    'file' => 'training6_i18n.pages.inc',
+  );
+
+  return $items;
+}
