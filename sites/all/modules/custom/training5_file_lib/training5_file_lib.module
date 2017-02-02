@@ -35,7 +35,6 @@ function training5_file_lib_menu() {
     'title' => 'Currency load',
     'page callback' => 'training5_file_lib_batch',
     'access callback' => TRUE,
-    'file' => 'training5_file_lib.pages.inc',
   );
 
   return $items;
@@ -62,4 +61,21 @@ function training5_file_lib_views_api() {
     'api' => 3,
     'path' => drupal_get_path('module', 'training5_file_lib') . '/includes/views',
   );
+}
+
+/**
+ * Page callback for currency/load using batch operation.
+ */
+function training5_file_lib_batch() {
+  $batch = array(
+    'title' => t('Load currency'),
+    'operations' => array(
+      array('training5_file_lib_batch_callback', array()),
+    ),
+    'finished' => 'training5_file_lib_batch_finished',
+    'file' => drupal_get_path('module', 'training5_file_lib') . '/training5_file_lib.pages.inc',
+  );
+
+  batch_set($batch);
+  batch_process('currency/view');
 }

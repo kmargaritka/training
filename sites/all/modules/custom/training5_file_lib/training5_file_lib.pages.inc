@@ -8,7 +8,7 @@
 /**
  * Url with current exchange rates.
  */
-define('TRAINING2_FORM_NBRB_RATES_XML', 'http://www.nbrb.by/Services/XmlExRates.aspx');
+define('TRAINING5_FILE_LIB_NBRB_RATES_XML', 'http://www.nbrb.by/Services/XmlExRates.aspx');
 
 /**
  * Page callback for files.
@@ -146,21 +146,6 @@ function training5_file_lib_download($file) {
 }
 
 /**
- * Page callback for currency/load using batch operation.
- */
-function training5_file_lib_batch() {
-  $batch = array(
-    'title' => t('Load currency'),
-    'operations' => array(
-      array('training5_file_lib_batch_callback', array()),
-    ),
-    'finished' => 'training5_file_lib_batch_finished',
-  );
-  batch_set($batch);
-  batch_process('currency/view');
-}
-
-/**
  * Operation function of training5_file_lib_batch().
  */
 function training5_file_lib_batch_callback() {
@@ -175,27 +160,14 @@ function training5_file_lib_batch_callback() {
     );
   }
 
-  $query = db_insert('training5_file_lib_rates')->fields(array('code', 'rate'));
+  $query = db_insert('training5_file_lib_rates')
+    ->fields(array('code', 'rate'));
+
   foreach ($rates as $rate) {
     $query->values($rate);
   }
 
   $query->execute();
-}
-
-/**
- * Finished function of training5_file_lib_batch().
- */
-function training5_file_lib_batch_finished($success, $results, $operations) {
-
-  if ($success) {
-    $message = t('Successfully loaded!!!');
-  }
-  else {
-    $message = t("Rates don't load.");
-  }
-
-  drupal_set_message($message);
 }
 
 /**
@@ -206,7 +178,7 @@ function training5_file_lib_batch_finished($success, $results, $operations) {
  */
 function training5_file_lib_get_xml_data() {
   $ch = curl_init();
-  curl_setopt($ch, CURLOPT_URL, TRAINING2_FORM_NBRB_RATES_XML);
+  curl_setopt($ch, CURLOPT_URL, TRAINING5_FILE_LIB_NBRB_RATES_XML);
   curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
   $xml_response = curl_exec($ch);
 
@@ -220,4 +192,3 @@ function training5_file_lib_get_xml_data() {
     return FALSE;
   }
 }
-
