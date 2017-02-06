@@ -19,20 +19,23 @@ function training6_i18n_registration_date() {
   global $user;
   $registration_date = format_date($user->created, 'custom', 'd F Y', $user->timezone);
 
-  $new_year = $new_year = mktime(0, 0, 0, 1, 1, (date("Y") + 1));
+  $new_year = mktime(0, 0, 0, 1, 1, (date("Y") + 1));
   $time_till_new_year = getdate($new_year - REQUEST_TIME);
   $days_till_new_year = $time_till_new_year['yday'];
 
-  $content = array(
-    'registration_date' => array(
-      '#type' => 'item',
-      '#title' => t('!user. You signed up:', array('!user' => $user->name)),
-      '#markup' => $registration_date,
+  $header = array(
+    'action' => array('data' => t('Action')),
+    'date' => array('data' => t('Date')),
+  );
+
+  $rows = array(
+    'data' => array(
+      'action' => t('!user. You signed up:', array('!user' => $user->name)),
+      'date' => $registration_date,
     ),
     'new_year' => array(
-      '#type' => 'item',
-      '#title' => t('Days till New Year:'),
-      '#markup' => $days_till_new_year,
+      'action' => t('Days till New Year:'),
+      'date' => $days_till_new_year,
     ),
   );
 
@@ -44,7 +47,10 @@ function training6_i18n_registration_date() {
   drupal_add_js(drupal_get_path('module', 'training6_i18n') . '/js/training6_i18n.js');
   drupal_add_js($data_to_js, 'setting');
 
-  return $content;
+  return theme('table', array(
+    'header' => $header,
+    'rows' => $rows,
+  ));
 }
 
 /**
