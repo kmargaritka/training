@@ -2,17 +2,14 @@
 
 /**
  * @file
- * Implements hook_schema() for homework on topic Files and Libraries.
+ * Implements hook_schema() for installing db-table.
  */
 
 /**
  * Implements hook_schema().
- *
- * Table for currency.
  */
 function training5_file_lib_schema() {
 
-  $schema = array();
   $schema['training5_file_lib_rates'] = array(
     'description' => 'The table of currency.',
     'fields' => array(

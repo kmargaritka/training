@@ -1,6 +1,3 @@
-/**
- * Hides uid row.
- */
-.table_uid {
+.table-uid {
   display: none;
 }

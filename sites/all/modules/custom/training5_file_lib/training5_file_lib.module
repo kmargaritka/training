@@ -41,17 +41,37 @@ function training5_file_lib_menu() {
 }
 
 /**
- * Custom access callback function for downloading files.
+ * Access callback for downloading files.
  */
 function training5_file_lib_access_callback() {
   global $user;
   $query = db_select('file_managed', 'f')
     ->fields('f', array('uid'))
     ->condition('f.uid', $user->uid);
-  $result = $query->execute()->fetchCol();
+  $result = $query->execute()->rowCount();
 
-  return in_array($user->uid, $result);
+  if (!empty($result)) {
+    return TRUE;
+  }
+  else {
+    return FALSE;
+  }
 }
+
+/**
+ * Implements hook_theme().
+ */
+function training5_file_lib_theme() {
+  $theme['training5_file_lib_theme'] = array(
+    'variables' => array(
+      'link' => NULL,
+    ),
+    'template' => 'templates/training5_file_lib_template',
+  );
+
+  return $theme;
+}
+
 
 /**
  * Implements hook_views_api().

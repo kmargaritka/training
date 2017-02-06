@@ -18,28 +18,26 @@ function training5_file_lib_files() {
   ctools_include('modal');
   ctools_include('ajax');
   ctools_modal_add_js();
-  drupal_add_css(drupal_get_path('module', 'training5_file_lib') . '/css/training5_file_lib.css');
-  drupal_add_js(drupal_get_path('module', 'training5_file_lib') . '/js/training5_file_lib.js');
+  $module_path = drupal_get_path('module', 'training5_file_lib');
+  drupal_add_css($module_path . '/css/training5_file_lib.css');
 
-  drupal_add_js(array('uid' => $user->uid), 'setting');
+  $query = db_select('file_managed', 'fm')
+    ->fields('fm')
+    ->condition('fm.uid', $user->uid);
+  $user_files_id = $query->execute()->fetchCol();
+
+  drupal_add_js($module_path . '/js/training5_file_lib.js');
+
+  drupal_add_js(array('training5_file_lib' => $user_files_id), 'setting');
   $link = ctools_modal_text_button(t('Upload file'), 'files/nojs/upload_file', 'click');
-  $content['link'] = array(
-    '#type' => 'item',
-    '#markup' => $link,
-  );
+  $link = theme('training5_file_lib_theme', array(
+    'link' => $link,
+  ));
 
-  $files = entity_load('file');
-  if (!empty($files)) {
-    $content['file_table'] = training5_file_lib_table($files);
-  }
-  else {
-    $content['file_table'] = array(
-      '#type' => 'item',
-      '#markup' => t("Files don't exist."),
-    );
-  }
+  $table = training5_file_lib_table();
+  $pager = theme('pager', array($table));
 
-  return $content;
+  return $link . $table . $pager;
 }
 
 /**
@@ -67,7 +65,7 @@ function training5_file_lib_upload_file($js) {
   }
 
   print ajax_render($commands);
-  exit;
+  drupal_exit();
 }
 
 /**
@@ -96,16 +94,22 @@ function training5_file_lib_upload_form_submit($form, &$form_state) {
 /**
  * List-table of files for /files.
  */
-function training5_file_lib_table($files) {
-  $rows = array();
+function training5_file_lib_table() {
   $header = array(
     'fid' => array('data' => t('file ID')),
-    'uid' => array('data' => t('user ID'), 'class' => 'table_uid'),
+    'uid' => array('data' => t('user ID'), 'class' => 'table-uid'),
     'filename' => array('data' => t('name')),
     'path' => array('data' => t('path')),
     'status' => array('data' => t('status')),
     'link' => array('data' => t('download')),
   );
+  $query = db_select('file_managed', 'fm')
+    ->fields('fm')
+    ->extend('PagerDefault')
+    ->limit(5);
+  $files = $query->execute();
+
+  $rows = array();
   foreach ($files as $file) {
     $status = $file->status ? 'permanent' : 'temporary';
     $url = file_create_url($file->uri);
@@ -116,23 +120,26 @@ function training5_file_lib_table($files) {
         'fid' => $file->fid,
         'uid' => array(
           'data' => $file->uid,
-          'class' => 'table_uid',
+          'class' => 'table-uid',
         ),
         'filename' => $file->filename,
         'path' => $url,
         'status' => $status,
         'link' => $link,
       ),
-      'class' => array('uid-' . $file->uid),
+      'class' => array('uid-' . $file->fid),
     );
   }
-  $table = array(
-    '#theme' => 'table',
-    '#header' => $header,
-    '#rows' => $rows,
-  );
 
-  return $table;
+  if (!empty($files)) {
+    return theme('table', array(
+      'header' => $header,
+      'rows' => $rows,
+    ));
+  }
+  else {
+    return t("Files don't exist.");
+  }
 }
 
 /**
@@ -148,9 +155,16 @@ function training5_file_lib_download($file) {
 /**
  * Operation function of training5_file_lib_batch().
  */
-function training5_file_lib_batch_callback() {
+function training5_file_lib_batch_callback(&$context) {
   $xml = training5_file_lib_get_xml_data();
+
+  if (!isset($context['sandbox']['progress'])) {
+    $context['sandbox']['progress'] = 0;
+    $context['sandbox']['max'] = count($xml->Currency);
+  }
+
   db_delete('training5_file_lib_rates')->execute();
+  $limit = 5;
   $rates = array();
 
   foreach ($xml->Currency as $currency) {
@@ -173,7 +187,7 @@ function training5_file_lib_batch_callback() {
 /**
  * Transformation XML.
  *
- * @return mixed
+ * @return array
  *   Return array currency.
  */
 function training5_file_lib_get_xml_data() {
@@ -182,13 +196,11 @@ function training5_file_lib_get_xml_data() {
   curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
   $xml_response = curl_exec($ch);
 
-  $xml_data = simplexml_load_string($xml_response);
-
-  if ($xml_data) {
+  if ($xml_data = simplexml_load_string($xml_response)) {
     return $xml_data;
   }
   else {
     watchdog('training5_file_lib', 'Bank\'s server is not available');
-    return FALSE;
+    return array();
   }
 }
