@@ -155,16 +155,8 @@ function training5_file_lib_download($file) {
 /**
  * Operation function of training5_file_lib_batch().
  */
-function training5_file_lib_batch_callback(&$context) {
+function training5_file_lib_batch_callback($progress, $limit, $currencies, &$context) {
   $xml = training5_file_lib_get_xml_data();
-
-  if (!isset($context['sandbox']['progress'])) {
-    $context['sandbox']['progress'] = 0;
-    $context['sandbox']['max'] = count($xml->Currency);
-  }
-
-  db_delete('training5_file_lib_rates')->execute();
-  $limit = 5;
   $rates = array();
 
   foreach ($xml->Currency as $currency) {
@@ -174,14 +166,28 @@ function training5_file_lib_batch_callback(&$context) {
     );
   }
 
-  $query = db_insert('training5_file_lib_rates')
+  $result = db_insert('training5_file_lib_rates')
     ->fields(array('code', 'rate'));
 
-  foreach ($rates as $rate) {
-    $query->values($rate);
+  $rates_slice = array_slice($rates, $progress, $limit);
+  foreach ($rates_slice as $key => $rate) {
+    $result->values($rate)->execute();
+  }
+}
+
+/**
+ * Finished function of training5_file_lib_batch().
+ */
+function training5_file_lib_batch_finished($success, $results, $operations) {
+
+  if ($success) {
+    $message = t('Successfully loaded at !results', array('!results' => $results));
+  }
+  else {
+    $message = t('Error.');
   }
 
-  $query->execute();
+  drupal_set_message($message);
 }
 
 /**

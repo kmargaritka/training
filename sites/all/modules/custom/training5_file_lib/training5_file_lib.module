@@ -5,6 +5,7 @@
  * Homework on topic Files, Libraries, Views.
  */
 
+include_once ('training5_file_lib.pages.inc');
 /**
  * Implements hook_menu().
  */
@@ -13,7 +14,6 @@ function training5_file_lib_menu() {
     'title' => 'Files',
     'page callback' => 'training5_file_lib_files',
     'access callback' => TRUE,
-    'file' => 'training5_file_lib.pages.inc',
   );
   $items['files/%ctools_js/upload_file'] = array(
     'title' => 'Add file',
@@ -21,7 +21,6 @@ function training5_file_lib_menu() {
     'page arguments' => array(1),
     'access callback' => TRUE,
     'type' => MENU_CALLBACK,
-    'file' => 'training5_file_lib.pages.inc',
   );
   $items['files/download/%file'] = array(
     'title' => 'Download file',
@@ -29,7 +28,6 @@ function training5_file_lib_menu() {
     'page arguments' => array(2),
     'access callback' => 'training5_file_lib_access_callback',
     'type' => MENU_CALLBACK,
-    'file' => 'training5_file_lib.pages.inc',
   );
   $items['currency/load'] = array(
     'title' => 'Currency load',
@@ -72,7 +70,6 @@ function training5_file_lib_theme() {
   return $theme;
 }
 
-
 /**
  * Implements hook_views_api().
  */
@@ -89,12 +86,40 @@ function training5_file_lib_views_api() {
 function training5_file_lib_batch() {
   $batch = array(
     'title' => t('Load currency'),
-    'operations' => array(
-      array('training5_file_lib_batch_callback', array()),
-    ),
+    'operations' => array(),
     'finished' => 'training5_file_lib_batch_finished',
     'file' => drupal_get_path('module', 'training5_file_lib') . '/training5_file_lib.pages.inc',
   );
+
+  $xml = training5_file_lib_get_xml_data();
+  $progress = 0;
+  $limit = 5;
+  $max = count($xml->Currency);
+
+  $db_result = db_select('training5_file_lib_rates', 'tfl')
+    ->fields('tfl')
+    ->execute()
+    ->fetchCol();
+
+  if (count($db_result) != 0) {
+    db_delete('training5_file_lib_rates')->execute();
+    while ($progress <= $max) {
+      $batch['operations'][] = array(
+        'training5_file_lib_batch_callback',
+        array($progress, $limit),
+      );
+      $progress = $progress + $limit;
+    }
+  }
+  else {
+    while ($progress <= $max) {
+      $batch['operations'][] = array(
+        'training5_file_lib_batch_callback',
+        array($progress, $limit),
+      );
+      $progress = $progress + $limit;
+    }
+  }
 
   batch_set($batch);
   batch_process('currency/view');
