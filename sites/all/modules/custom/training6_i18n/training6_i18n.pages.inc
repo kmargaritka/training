@@ -60,7 +60,6 @@ function training6_i18n_textarea_and_button() {
 
   $form['textarea'] = array(
     '#type' => 'textarea',
-    '#value' => t('Textarea'),
     '#attributes' => array('id' => 'textarea'),
     '#attached' => array(
       'js' => array(drupal_get_path('module', 'training6_i18n') . '/js/training6_i18n.js'),
