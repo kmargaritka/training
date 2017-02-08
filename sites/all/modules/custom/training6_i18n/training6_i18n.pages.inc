@@ -54,24 +54,23 @@ function training6_i18n_registration_date() {
 }
 
 /**
- * Page callback for /textarea.
+ * Page arguments for /textarea.
  */
 function training6_i18n_textarea_and_button() {
-  drupal_add_js(drupal_get_path('module', 'training6_i18n') . '/js/training6_i18n.js');
 
-  $form = array(
-    'textarea' => array(
-      '#type' => 'textarea',
-      '#value' => t('Textarea'),
-      '#attributes' => array('id' => 'textarea'),
+  $form['textarea'] = array(
+    '#type' => 'textarea',
+    '#value' => t('Textarea'),
+    '#attributes' => array('id' => 'textarea'),
+    '#attached' => array(
+      'js' => array(drupal_get_path('module', 'training6_i18n') . '/js/training6_i18n.js'),
     ),
-    'button' => array(
-      '#type' => 'button',
-      '#value' => t('Button'),
-      '#attributes' => array('id' => 'button'),
-    ),
+  );
+  $form['button'] = array(
+    '#type' => 'button',
+    '#value' => t('Button'),
+    '#attributes' => array('id' => 'button'),
   );
 
   return $form;
 }
-

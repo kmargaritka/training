@@ -24,6 +24,7 @@ function training6_i18n_menu() {
   $items['textarea'] = array(
     'title' => 'Textarea and Button',
     'page callback' => 'training6_i18n_textarea_and_button',
+    'page arguments' => array('training6_i18n_textarea_and_button', 1),
     'access callback' => TRUE,
     'file' => 'training6_i18n.pages.inc',
   );
