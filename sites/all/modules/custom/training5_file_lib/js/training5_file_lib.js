@@ -1,9 +1,3 @@
-/**
- * @type {Drupal~behavior}
- *
- * @prop {Drupal~behaviorAttach} attach
- *   Red rows with id = uid-[UserID].
- */
 (function($){
 
   Drupal.behaviors.training5FileLibTable = {

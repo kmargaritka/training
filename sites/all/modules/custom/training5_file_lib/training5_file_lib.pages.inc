@@ -30,7 +30,7 @@ function training5_file_lib_files() {
 
   drupal_add_js(array('training5_file_lib' => $user_files_id), 'setting');
   $link = ctools_modal_text_button(t('Upload file'), 'files/nojs/upload_file', 'click');
-  $link = theme('training5_file_lib_theme', array(
+  $link = theme('training5_upload_link', array(
     'link' => $link,
   ));
 
@@ -155,23 +155,47 @@ function training5_file_lib_download($file) {
 /**
  * Operation function of training5_file_lib_batch().
  */
-function training5_file_lib_batch_callback($progress, $limit, $currencies, &$context) {
-  $xml = training5_file_lib_get_xml_data();
-  $rates = array();
+function training5_file_lib_batch_callback(&$context) {
+  if (empty($context['sandbox'])) {
+    $xml = training5_file_lib_get_xml_data();
+    $currencies = array();
+    $rates = array();
 
-  foreach ($xml->Currency as $currency) {
-    $rates[] = array(
-      'code' => (string) $currency->CharCode,
-      'rate' => (string) $currency->Rate,
-    );
+    for ($i = 0; $i < count($xml->Currency); $i++) {
+      $currencies[] = $xml->Currency[$i];
+    }
+
+    foreach ($currencies as $currency) {
+      $rates[] = array(
+        'code' => (string) $currency->CharCode,
+        'rate' => (string) $currency->Rate,
+      );
+    }
+
+    db_delete('training5_file_lib_rates')->execute();
+
+    $context['sandbox'] = array();
+    $context['sandbox']['rates'] = $rates;
+    $context['sandbox']['progress'] = 0;
+    $context['sandbox']['max'] = count($xml->Currency);
   }
+
+  $limit = 5;
 
   $result = db_insert('training5_file_lib_rates')
     ->fields(array('code', 'rate'));
 
-  $rates_slice = array_slice($rates, $progress, $limit);
+  $rates_slice = array_slice($context['sandbox']['rates'], $context['sandbox']['progress'], $limit);
   foreach ($rates_slice as $key => $rate) {
-    $result->values($rate)->execute();
+    $result->values($rate);
+  }
+
+  $result->execute();
+
+  $context['sandbox']['progress'] += $limit;
+
+  if ($context['sandbox']['progress'] != $context['sandbox']['max']) {
+    $context['finished'] = ($context['sandbox']['progress'] / $context['sandbox']['max']);
   }
 }
 
@@ -181,7 +205,7 @@ function training5_file_lib_batch_callback($progress, $limit, $currencies, &$con
 function training5_file_lib_batch_finished($success, $results, $operations) {
 
   if ($success) {
-    $message = t('Successfully loaded at !results', array('!results' => $results));
+    $message = t('Successfully loaded');
   }
   else {
     $message = t('Error.');

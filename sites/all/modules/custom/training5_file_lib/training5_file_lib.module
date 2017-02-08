@@ -5,7 +5,6 @@
  * Homework on topic Files, Libraries, Views.
  */
 
-include_once ('training5_file_lib.pages.inc');
 /**
  * Implements hook_menu().
  */
@@ -14,6 +13,7 @@ function training5_file_lib_menu() {
     'title' => 'Files',
     'page callback' => 'training5_file_lib_files',
     'access callback' => TRUE,
+    'file' => 'training5_file_lib.pages.inc',
   );
   $items['files/%ctools_js/upload_file'] = array(
     'title' => 'Add file',
@@ -21,6 +21,7 @@ function training5_file_lib_menu() {
     'page arguments' => array(1),
     'access callback' => TRUE,
     'type' => MENU_CALLBACK,
+    'file' => 'training5_file_lib.pages.inc',
   );
   $items['files/download/%file'] = array(
     'title' => 'Download file',
@@ -28,6 +29,7 @@ function training5_file_lib_menu() {
     'page arguments' => array(2),
     'access callback' => 'training5_file_lib_access_callback',
     'type' => MENU_CALLBACK,
+    'file' => 'training5_file_lib.pages.inc',
   );
   $items['currency/load'] = array(
     'title' => 'Currency load',
@@ -48,19 +50,14 @@ function training5_file_lib_access_callback() {
     ->condition('f.uid', $user->uid);
   $result = $query->execute()->rowCount();
 
-  if (!empty($result)) {
-    return TRUE;
-  }
-  else {
-    return FALSE;
-  }
+  return !empty($result);
 }
 
 /**
  * Implements hook_theme().
  */
 function training5_file_lib_theme() {
-  $theme['training5_file_lib_theme'] = array(
+  $theme['training5_upload_link'] = array(
     'variables' => array(
       'link' => NULL,
     ),
@@ -84,6 +81,20 @@ function training5_file_lib_views_api() {
  * Page callback for currency/load using batch operation.
  */
 function training5_file_lib_batch() {
+  $batch = array(
+    'title' => t('Load currency'),
+    'operations' => array(
+      array('training5_file_lib_batch_callback', array()),
+    ),
+    'finished' => 'training5_file_lib_batch_finished',
+    'file' => drupal_get_path('module', 'training5_file_lib') . '/training5_file_lib.pages.inc',
+  );
+
+  batch_set($batch);
+  batch_process('currency/view');
+}
+
+/*function training5_file_lib_batch() {
   $batch = array(
     'title' => t('Load currency'),
     'operations' => array(),
@@ -123,4 +134,4 @@ function training5_file_lib_batch() {
 
   batch_set($batch);
   batch_process('currency/view');
-}
+}*/
