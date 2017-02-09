@@ -47,8 +47,9 @@ function training5_file_lib_access_callback() {
   global $user;
   $query = db_select('file_managed', 'f')
     ->fields('f', array('uid'))
-    ->condition('f.uid', $user->uid);
-  $result = $query->execute()->rowCount();
+    ->condition('f.uid', $user->uid)
+    ->range(0, 1);
+  $result = $query->execute();
 
   return !empty($result);
 }
@@ -57,7 +58,7 @@ function training5_file_lib_access_callback() {
  * Implements hook_theme().
  */
 function training5_file_lib_theme() {
-  $theme['training5_upload_link'] = array(
+  $theme['training5_file_lib_upload_link'] = array(
     'variables' => array(
       'link' => NULL,
     ),

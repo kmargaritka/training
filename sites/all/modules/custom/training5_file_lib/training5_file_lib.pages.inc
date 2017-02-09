@@ -30,7 +30,7 @@ function training5_file_lib_files() {
 
   drupal_add_js(array('training5_file_lib' => $user_files_id), 'setting');
   $link = ctools_modal_text_button(t('Upload file'), 'files/nojs/upload_file', 'click');
-  $link = theme('training5_upload_link', array(
+  $link = theme('training5_file_lib_upload_link', array(
     'link' => $link,
   ));
 
@@ -158,26 +158,29 @@ function training5_file_lib_download($file) {
 function training5_file_lib_batch_callback(&$context) {
   if (empty($context['sandbox'])) {
     $xml = training5_file_lib_get_xml_data();
-    $currencies = array();
-    $rates = array();
+    if ($xml != FALSE) {
+      $rates = array();
+      $xml_currency_count = count($xml->Currency);
 
-    for ($i = 0; $i < count($xml->Currency); $i++) {
-      $currencies[] = $xml->Currency[$i];
+      for ($i = 0; $i < $xml_currency_count; $i++) {
+        $currencies[] = $xml->Currency[$i];
+      }
+
+      foreach ($currencies as $currency) {
+        $rates[] = array(
+          'code' => (string) $currency->CharCode,
+          'rate' => (string) $currency->Rate,
+        );
+      }
+
+      db_delete('training5_file_lib_rates')->execute();
+
+      $context['sandbox'] = array();
+      $context['sandbox']['rates'] = $rates;
+      $context['sandbox']['progress'] = 0;
+      $context['sandbox']['max'] = $xml_currency_count;
     }
 
-    foreach ($currencies as $currency) {
-      $rates[] = array(
-        'code' => (string) $currency->CharCode,
-        'rate' => (string) $currency->Rate,
-      );
-    }
-
-    db_delete('training5_file_lib_rates')->execute();
-
-    $context['sandbox'] = array();
-    $context['sandbox']['rates'] = $rates;
-    $context['sandbox']['progress'] = 0;
-    $context['sandbox']['max'] = count($xml->Currency);
   }
 
   $limit = 5;
@@ -193,10 +196,7 @@ function training5_file_lib_batch_callback(&$context) {
   $result->execute();
 
   $context['sandbox']['progress'] += $limit;
-
-  if ($context['sandbox']['progress'] != $context['sandbox']['max']) {
-    $context['finished'] = ($context['sandbox']['progress'] / $context['sandbox']['max']);
-  }
+  $context['finished'] = ($context['sandbox']['progress'] / $context['sandbox']['max']);
 }
 
 /**
