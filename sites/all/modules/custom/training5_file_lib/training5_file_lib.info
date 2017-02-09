@@ -1,0 +1,5 @@
+name = Training 5. Files, libruaries, views.
+description = Demonstrates homework on topic Files and Libraries.
+core = 7.x
+version = 1.0
+package = Training
