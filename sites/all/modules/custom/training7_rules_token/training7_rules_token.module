@@ -1,0 +1,117 @@
+<?php
+
+/**
+ * @file
+ * Homework on topic Tokens, Rules, Performance, Search, Services.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function training7_rules_token_menu() {
+
+  $menu['lottery'] = array(
+    'title' => 'Lottery',
+    'page callback' => 'training7_rules_token_lottery',
+    'access callback' => TRUE,
+    'file' => 'training7_rules_token.pages.inc',
+  );
+
+  return $menu;
+}
+
+/**
+ * Implements hook_block_info().
+ */
+function raining7_rules_token_block_info() {
+  $blocks['lottery_table'] = array(
+    'info' => t('Lotteries'),
+    'status' => 1,
+    'region' => 'content',
+    'visibility' => BLOCK_VISIBILITY_LISTED,
+    'pages' => 'lottery',
+  );
+
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function training7_rules_token_block_view($delta = '') {
+
+  if ($delta == 'lottery_table') {
+    $block['subject'] = t('Lotteries');
+    $block['content'] = training7_rules_token_block_contents($delta);
+
+    return $block;
+  }
+}
+
+/**
+ * Callback function for Lottery Table block.
+ */
+function training7_rules_token_block_contents($delta = '') {
+  $data = cache_get('lottery_list');
+
+  if ($delta == 'lottery_table') {
+    $header = array(
+      'Lottery id',
+      'Date',
+      'User name',
+      'Result',
+    );
+
+    if (!$data) {
+      $rows = array();
+    }
+    else {
+      $lotteries = $data->data;
+      foreach ($lotteries as $lottery) {
+        $rows[] = array(
+          $lottery['lottery_id'],
+          $lottery['time'],
+          $lottery['user_name'],
+          $lottery['result'],
+        );
+      }
+    }
+
+    return theme('table', array(
+      'header' => $header,
+      'rows' => $rows,
+    ));
+  }
+}
+
+/**
+ * Implements hook_xmlrpc().
+ */
+function training7_rules_token_xmlrpc() {
+  $methods[] = array(
+    'training7_rules_token_run_lottery.generate',
+    '_training7_rules_token_run_lottery_callback',
+    array(
+      'string',
+      'int',
+    ),
+    t('Returns result.'),
+  );
+
+  return $methods;
+}
+
+/**
+ * XML-RPC callback for training7_rules_token_run_lottery.generate.
+ */
+function _training7_rules_token_run_lottery_callback($rand) {
+
+  if ($rand == rand(1, 8)) {
+    $code = 'win';
+  }
+  else {
+    $code = 'doesn\'t win';
+  }
+
+  return $code;
+}

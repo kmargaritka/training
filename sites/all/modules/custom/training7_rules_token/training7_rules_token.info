@@ -1,0 +1,5 @@
+name = Training 7. Tokens, Rules, Performance, Search, Services
+description = Demonstrates homework on topic Tokens, Rules, Performance, Search, Services.
+core = 7.x
+version = 1.0
+package = Training
