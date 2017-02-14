@@ -51,8 +51,7 @@ function training7_rules_token_rules_action_info() {
  */
 function training7_rules_token_result() {
   $rand = rand(1, 8);
-  global $user;
-  global $base_url;
+  global $user, $base_url;
   $server = url($base_url . '/xmlrpc.php', array('external' => TRUE));
   $options = array(
     'training7_rules_token_run_lottery.generate' => array($rand),
@@ -100,7 +99,6 @@ function training7_rules_token_win_message() {
   $needs_data = array('lottery' => $lottery);
   $result = token_replace($msg, $needs_data);
 
-  global $user;
   cache_set($user->uid . '_winner', $result);
 
   drupal_set_message($result);

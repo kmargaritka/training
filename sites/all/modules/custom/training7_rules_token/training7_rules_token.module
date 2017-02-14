@@ -39,13 +39,15 @@ function raining7_rules_token_block_info() {
  * Implements hook_block_view().
  */
 function training7_rules_token_block_view($delta = '') {
+  $block = array();
 
-  if ($delta == 'lottery_table') {
-    $block['subject'] = t('Lotteries');
-    $block['content'] = training7_rules_token_block_contents($delta);
-
-    return $block;
+  switch ($delta) {
+    case 'lottery_table':
+      $block['subject'] = t('Lotteries');;
+      $block['content'] = training7_rules_token_block_contents($delta);
+      break;
   }
+  return $block;
 }
 
 /**
